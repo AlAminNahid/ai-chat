@@ -1,65 +1,147 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  async function sendMessage() {
+    if (!input.trim() || loading) return;
+
+    const newMessages: Message[] = [
+      ...messages,
+      { role: "user", content: input },
+    ];
+
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: newMessages }),
+    });
+
+    const data = await res.json();
+
+    setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+    setLoading(false);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col h-screen bg-[#f5f4f2] text-gray-800">
+      {/* Header */}
+      <header className="border-b border-[#e2e0dc] px-6 py-4 flex items-center gap-3 bg-white shadow-sm">
+        <div className="w-9 h-9 rounded-xl bg-[#6b6b6b] flex items-center justify-center text-sm font-semibold text-white">
+          AI
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div>
+          <h1 className="font-semibold text-gray-700">AI Assistant</h1>
         </div>
+        <span className="ml-auto flex items-center gap-1.5 text-xs text-emerald-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          Online
+        </span>
+      </header>
+
+      {/* Messages */}
+      <main className="flex-1 overflow-y-auto px-4 py-8 space-y-6">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-[#e8e6e2] flex items-center justify-center text-3xl">
+              💬
+            </div>
+            <p className="text-lg font-medium text-gray-500">
+              How can I help you?
+            </p>
+            <p className="text-sm text-gray-400">
+              Ask me anything — time, weather, general knowledge...
+            </p>
+          </div>
+        )}
+
+        {messages.map((m, i) => (
+          <div
+            key={i}
+            className={`flex items-end gap-3 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+          >
+            {/* Avatar */}
+            <div
+              className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${
+                m.role === "user"
+                  ? "bg-[#6b6b6b] text-white"
+                  : "bg-[#dedad5] text-gray-600"
+              }`}
+            >
+              {m.role === "user" ? "U" : "AI"}
+            </div>
+
+            {/* Bubble */}
+            <div
+              className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
+                m.role === "user"
+                  ? "bg-[#3d3d3d] text-white rounded-br-sm"
+                  : "bg-white text-gray-700 rounded-bl-sm border border-[#e2e0dc]"
+              }`}
+            >
+              {m.content}
+            </div>
+          </div>
+        ))}
+
+        {/* Typing indicator */}
+        {loading && (
+          <div className="flex items-end gap-3">
+            <div className="w-7 h-7 rounded-full bg-[#dedad5] flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-600">
+              AI
+            </div>
+            <div className="bg-white border border-[#e2e0dc] px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1 items-center shadow-sm">
+              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
+              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
+              <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
       </main>
+
+      {/* Input */}
+      <footer className="border-t border-[#e2e0dc] bg-white px-4 py-4 shadow-[0_-1px_4px_rgba(0,0,0,0.04)]">
+        <div className="max-w-3xl mx-auto flex items-center gap-3">
+          <input
+            className="flex-1 bg-[#f5f4f2] border border-[#dedad5] rounded-xl px-4 py-3 text-sm text-gray-700 placeholder-gray-400 outline-none focus:border-gray-400 transition-colors"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            placeholder="Ask anything..."
+            disabled={loading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            className="bg-[#3d3d3d] hover:bg-[#2a2a2a] disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-3 rounded-xl text-sm font-medium transition-colors"
+          >
+            Send
+          </button>
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-2">
+          Press Enter to send
+        </p>
+      </footer>
     </div>
   );
 }
