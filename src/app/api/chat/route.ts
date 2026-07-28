@@ -1,27 +1,28 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { generateReply } from "@/lib/gemini";
+import { parseMessages } from "@/lib/validation";
+import { ERRORS } from "@/constants/app";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const body = await req.json().catch(() => null);
+    const messages = parseMessages(body);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
+    if (!messages) {
+      return NextResponse.json(
+        { error: "Request body must include a non-empty `messages` array." },
+        { status: 400 },
+      );
+    }
 
-    const contents = messages.map((m: { role: string; content: string }) => ({
-      role: m.role === "user" ? "user" : "model",
-      parts: [{ text: m.content }],
-    }));
+    const reply = await generateReply(messages);
 
-    const result = await model.generateContent({ contents });
-    const text = result.response.text();
-
-    return NextResponse.json({ reply: text });
+    return NextResponse.json({ reply });
   } catch (error) {
-    console.error("Gemini API error:", error);
+    console.error("[api/chat]", error);
+
     return NextResponse.json(
-      { error: "Something went wrong", detail: String(error) },
+      { error: ERRORS.generic, detail: String(error) },
       { status: 500 },
     );
   }
