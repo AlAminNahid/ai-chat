@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-
 import { sendChatMessages } from "@/services/chatService";
 import { ERRORS } from "@/constants/app";
 import type { Message } from "@/types/chat";

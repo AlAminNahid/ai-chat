@@ -1,5 +1,3 @@
-import { APP } from "@/constants/app";
-
 type SidebarProps = {
   open: boolean;
   onClose: () => void;
@@ -41,9 +39,6 @@ export function Sidebar({ open, onClose, onNewChat }: SidebarProps) {
               <path d="M22 11v2" />
             </svg>
           </div>
-          <span className="font-semibold text-sm text-zinc-800 dark:text-zinc-100">
-            {APP.name}
-          </span>
 
           <button
             aria-label="Close sidebar"

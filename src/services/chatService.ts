@@ -16,7 +16,7 @@ export async function sendChatMessages(messages: Message[]): Promise<string> {
 
   const data = (await response.json().catch(() => null)) as ChatResponse | null;
 
-  if (!response.ok || data === null || "error" in data) {
+  if (!response.ok || data === null || "error" in data || !("reply" in data)) {
     const detail = data && "error" in data ? data.error : null;
     throw new Error(detail ?? ERRORS.generic);
   }

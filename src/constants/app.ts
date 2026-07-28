@@ -5,7 +5,7 @@ export const APP = {
   inputPlaceholder: "Ask anything...",
   inputHint: "Press Enter to send, Shift + Enter for a new line",
   sendLabel: "Send",
-  onlineLabel: "Online",
+  onlineLabel: "Your Captain Ready",
 } as const;
 
 export const SUGGESTIONS = [
