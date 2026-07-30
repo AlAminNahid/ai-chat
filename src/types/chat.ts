@@ -7,10 +7,12 @@ export type Message = {
 
 export type ChatRequest = {
   messages: Message[];
+  conversationId?: string;
 };
 
 export type ChatSuccessResponse = {
   reply: string;
+  conversationId: string;
 };
 
 export type ChatErrorResponse = {
@@ -19,3 +21,9 @@ export type ChatErrorResponse = {
 };
 
 export type ChatResponse = ChatSuccessResponse | ChatErrorResponse;
+
+export type ConversationSummary = {
+  id: string;
+  title: string | null;
+  updatedAt: string;
+};

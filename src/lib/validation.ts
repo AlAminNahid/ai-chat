@@ -21,3 +21,24 @@ export function parseMessages(value: unknown): Message[] | null {
 
   return messages;
 }
+
+export type ChatBody = {
+  messages: Message[];
+  conversationId: string | null;
+};
+
+export function parseChatBody(value: unknown): ChatBody | null {
+  const messages = parseMessages(value);
+  if (!messages) return null;
+
+  const { conversationId } = value as Record<string, unknown>;
+  if (
+    conversationId !== undefined &&
+    conversationId !== null &&
+    typeof conversationId !== "string"
+  ) {
+    return null;
+  }
+
+  return { messages, conversationId: conversationId ?? null };
+}

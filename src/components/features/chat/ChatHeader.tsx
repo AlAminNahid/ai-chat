@@ -1,31 +1,9 @@
 import { APP } from "@/constants/app";
 
-type ChatHeaderProps = {
-  onToggleSidebar: () => void;
-};
-
-export function ChatHeader({ onToggleSidebar }: ChatHeaderProps) {
+export function ChatHeader() {
   return (
     <header className="sticky top-0 z-10 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md px-4 sm:px-6 py-3.5">
       <div className="max-w-5xl mx-auto flex items-center gap-3">
-        <button
-          aria-label="Toggle sidebar"
-          onClick={onToggleSidebar}
-          className="md:hidden text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100 p-1 -ml-1"
-        >
-          <svg
-            className="w-5 h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 6h18M3 12h18M3 18h18" />
-          </svg>
-        </button>
-
         <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm shadow-indigo-500/30">
           <svg
             className="w-5 h-5 text-white"
