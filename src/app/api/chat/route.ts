@@ -3,6 +3,7 @@ import { generateReply } from "@/lib/gemini";
 import { parseChatBody } from "@/lib/validation";
 import { prisma } from "@/lib/prisma";
 import { ERRORS } from "@/constants/app";
+import type { Message } from "@/types/chat";
 
 function titleFrom(content: string): string {
   const trimmed = content.trim();
@@ -24,34 +25,43 @@ export async function POST(req: NextRequest) {
     const { messages, conversationId } = parsed;
     const latestMessage = messages[messages.length - 1];
 
+    let existingMessages: Message[] = [];
+
+    if (conversationId) {
+      const existing = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { messages: true },
+      });
+
+      if (!existing) {
+        return NextResponse.json(
+          { error: "Conversation not found." },
+          { status: 404 },
+        );
+      }
+
+      existingMessages = existing.messages as Message[];
+    }
+
+    const reply = await generateReply(messages);
+
+    const finalMessages: Message[] = [
+      ...existingMessages,
+      { role: latestMessage.role, content: latestMessage.content },
+      { role: "assistant", content: reply },
+    ];
+
     const conversation = conversationId
       ? await prisma.conversation.update({
           where: { id: conversationId },
-          data: {
-            updatedAt: new Date(),
-            messages: {
-              create: { role: latestMessage.role, content: latestMessage.content },
-            },
-          },
+          data: { updatedAt: new Date(), messages: finalMessages },
         })
       : await prisma.conversation.create({
           data: {
             title: titleFrom(latestMessage.content),
-            messages: {
-              create: { role: latestMessage.role, content: latestMessage.content },
-            },
+            messages: finalMessages,
           },
         });
-
-    const reply = await generateReply(messages);
-
-    await prisma.conversation.update({
-      where: { id: conversation.id },
-      data: {
-        updatedAt: new Date(),
-        messages: { create: { role: "assistant", content: reply } },
-      },
-    });
 
     return NextResponse.json({ reply, conversationId: conversation.id });
   } catch (error) {

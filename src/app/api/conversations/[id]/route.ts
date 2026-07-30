@@ -12,7 +12,7 @@ export async function GET(
 
     const conversation = await prisma.conversation.findUnique({
       where: { id },
-      include: { messages: { orderBy: { createdAt: "asc" } } },
+      select: { messages: true },
     });
 
     if (!conversation) {
@@ -22,12 +22,9 @@ export async function GET(
       );
     }
 
-    const messages = conversation.messages.map((message) => ({
-      role: message.role as Role,
-      content: message.content,
-    }));
-
-    return NextResponse.json({ messages });
+    return NextResponse.json({
+      messages: conversation.messages as { role: Role; content: string }[],
+    });
   } catch (error) {
     console.error("[api/conversations/:id]", error);
 

@@ -134,10 +134,7 @@ export function Sidebar({
                   {conversations.map((conversation) => (
                     <button
                       key={conversation.id}
-                      onClick={() => {
-                        onSelect(conversation.id);
-                        onClose();
-                      }}
+                      onClick={() => onSelect(conversation.id)}
                       className={`w-full text-left truncate rounded-lg px-2.5 py-2 text-sm transition-colors ${
                         conversation.id === activeId
                           ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100"

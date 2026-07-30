@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChatHeader } from "./ChatHeader";
 import { ChatInput } from "./ChatInput";
 import { MessageList } from "./MessageList";
@@ -22,13 +22,16 @@ export function ChatContainer() {
     resetChat,
     loadConversation,
   } = useChat(refresh);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.matchMedia("(max-width: 767px)").matches;
+  });
 
-  useEffect(() => {
+  const closeOnMobile = () => {
     if (window.matchMedia("(max-width: 767px)").matches) {
       setSidebarOpen(false);
     }
-  }, []);
+  };
 
   return (
     <AppShell
@@ -39,11 +42,14 @@ export function ChatContainer() {
           onClose={() => setSidebarOpen(false)}
           onNewChat={() => {
             resetChat();
-            setSidebarOpen(false);
+            closeOnMobile();
           }}
           conversations={conversations}
           activeId={conversationId}
-          onSelect={loadConversation}
+          onSelect={(id) => {
+            loadConversation(id);
+            closeOnMobile();
+          }}
         />
       }
     >
