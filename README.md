@@ -1,37 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Chat
+
+A chat application built with Next.js that talks to Google's Gemini API and persists conversations in Postgres via Prisma.
+
+## Tech Stack
+
+- **Next.js 16** (App Router) + **React 19**
+- **Tailwind CSS 4**
+- **Prisma 7** with the Postgres adapter (`@prisma/adapter-pg`)
+- **Google Generative AI** (`@google/generative-ai`) for chat completions
+- **PostgreSQL** (via Docker Compose)
+
+## Project Structure
+
+```
+src/
+  app/
+    api/
+      chat/                # POST endpoint: send a message, get an AI reply
+      conversations/       # list conversations
+      conversations/[id]/  # fetch/delete a single conversation
+  components/
+    features/chat/         # ChatContainer, MessageList, ChatInput, etc.
+    layouts/                # AppShell, Sidebar
+    ui/                     # Avatar, Button
+  lib/
+    gemini.ts               # Gemini client / reply generation
+    prisma.ts               # Prisma client
+    validation.ts            # request body validation
+  services/
+    chatService.ts          # chat data access helpers
+  generated/prisma/          # generated Prisma client
+prisma/
+  schema.prisma              # Conversation / Message models
+docker-compose.yml            # local Postgres instance
+```
+
+## Data Model
+
+- **Conversation** — `id`, `title`, `createdAt`, `updatedAt`, has many `messages`
+- **Message** — `id`, `conversationId`, `role`, `content`, `createdAt`
 
 ## Getting Started
 
-First, run the development server:
+### 1. Start Postgres
+
+```bash
+docker-compose up -d
+```
+
+This runs Postgres 16 on `localhost:5433` with database `ai_chat`.
+
+### 2. Configure environment variables
+
+Create a `.env` file with:
+
+```bash
+DATABASE_URL="postgresql://admin:root@localhost:5433/ai_chat"
+GEMINI_API_KEY="your-gemini-api-key"
+```
+
+### 3. Install dependencies & set up the database
+
+```bash
+npm install
+npx prisma migrate dev
+```
+
+### 4. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to use the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Next.js dev server |
+| `npm run build` | Build for production |
+| `npm run start` | Start the production server |
+| `npm run lint` | Run ESLint |
 
-## Learn More
+## API
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# ai-chat
+- `POST /api/chat` — send `{ messages, conversationId? }`, get back `{ reply, conversationId }`. Creates a new conversation if `conversationId` is omitted, saves both the user message and the AI reply.
+- `GET /api/conversations` — list conversations.
+- `GET/DELETE /api/conversations/[id]` — fetch or delete a single conversation.
